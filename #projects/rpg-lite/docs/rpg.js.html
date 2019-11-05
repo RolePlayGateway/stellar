@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Source: rpg.js &middot; Docs</title>
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+  </head>
+  <body>
+    <div id="main"><h1 class="page-title">Source: rpg.js</h1>
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+// ### Types
+// Types are mostly imported from `@fabric/core` — an SDK for
+// building distributed applications.  We'll cover this in more
+// detail later, but there's [an entire site dedicated to docs][docs]
+// if you're interested in learning more now.
+const Collection = require('@fabric/core/types/collection');
+const Entity = require('@fabric/core/types/entity');
+const Remote = require('@fabric/core/types/remote');
+const Service = require('@fabric/core/types/service');
+
+const Queue = require('./queue');
+
+/**
+ * The core {@link RPG} class provides all functions necessary
+ * for interacting with the game world, as powered by {@link Verse}.
+ */
+class RPG extends Service {
+  /**
+   * Instantiate an instance of {@link RPG} using `new RPG(settings)`, where
+   * `settings` is an `Object` containing various optional settings.
+   * @param {Object} [settings]
+   * @param {String} [settings.authority=localhost:9999] Host and port combination reflecting intended authority. 
+   */
+  constructor (settings = {}) {
+    super(settings);
+
+    this.settings = Object.assign({
+      authority: 'localhost:9999',
+      sync: false
+    }, settings);
+
+    // Internals
+    this.cache = [];
+    this.queue = new Queue();
+    this.remote = new Remote(this.settings);
+
+    // Collections
+    this.universes = new Collection();
+
+    // Typecasting
+    this.queue.use(RPG);
+    this.queue.use(Collection);
+
+    // Flags
+    this.status = 'waiting';
+
+    // State
+    this._state = {};
+  }
+
+  /**
+   * Provides a simple list of named {@link Collection} types to manage.
+   */
+  get handles () {
+    // TODO: document public APIs for api.roleplaygateway.com
+    return [
+      `universes`,
+      `authors`,
+      `characters`
+    ];
+  }
+
+  /**
+   * Provides an {@link Entity} representing the current game state.
+   * @property {String} id Hex-encoded unique identifier for the game state.
+   */
+  get state () {
+    let state = {
+      status: this.status,
+      queue: this.queue
+    };
+
+    for (let i = 0; this.handles.length; i++) {
+      state[this.handles[i]] = this._state[this.handles[i]];
+    }
+
+    return new Entity(state);
+  }
+
+  set state (obj) {
+    if (!this.cache) this.cache = [];
+    /* this.cache.push({
+      '@method': 'SET',
+      '@params': [`/state`, obj]
+    }); */
+    return this;
+  }
+
+  log (...msg) {
+    console.log.apply(null, [ `@[${Date.now()}]` ].concat(msg));
+  }
+
+  async _connectSwarm () {
+    // TODO: implement
+  }
+
+  /**
+   * Call `start()` to begin processing the game state, including
+   * the clock beginning to advance for the in-game world.
+   */
+  async start () {
+    console.log('[RPG:LITE]', '[ENGINE]', 'Starting...');
+    this.status = 'starting';
+
+    // run dependencies
+    if (this.settings.sync) await this._sync();
+    if (this.settings.fabric) await this._connectSwarm();
+
+    this.status = 'started';
+    console.log('[RPG:LITE]', '[ENGINE]', 'Started!');
+  }
+
+  /**
+   * Load information from the configured {@link Authority}.
+   */
+  async _sync () {
+    this.log('[RPG:LITE]', '[ENGINE]', 'Syncing...');
+    this.status = 'syncing';
+
+    console.log('[RPG:LITE]', '[ENGINE]', 'Remote used:', this.remote);
+
+    for (let i = 0; i &lt; this.handles.length; i++) {
+      let handle = this.handles[i];
+
+      try {
+        this._state[handle] = await this.remote._GET(`/${handle}`);
+      } catch (E) {
+        console.error('[RPG:LITE]', '[ENGINE]', 'Could not sync:', E);
+      }
+    }
+
+    this.status = 'synced';
+    this.log('[RPG:LITE]', '[ENGINE]', 'Synced!');
+  }
+}
+
+module.exports = RPG;
+
+// fabric: https://github.com/FabricLabs/fabric
+// docs: https://dev.fabric.pub</code></pre>
+        </article>
+    </section>
+
+
+
+</div>
+    <nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="RPG.html">RPG</a></li></ul></nav>
+    <br class="clear" />
+    <footer><a href="https://github.com/RolePlayGateway/rpg-lite">git://</a> &middot; <a href="https://chat.roleplaygateway.com/#/room/#lobby:roleplaygateway.com">Community</a></footer>
+    <script type="text/javascript">
+      prettyPrint();
+    </script>
+    <script src="scripts/linenumber.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "name": "rpg-lite",
+  "version": "0.1.0-dev",
+  "description": "Lightweight version of RPG.",
+  "main": "types/rpg.js",
+  "scripts": {
+    "build": "webpack -o assets/scripts/rpg.lite.js",
+    "coverage": "nyc npm test",
+    "docs": "npm run make:docs && ecstatic docs",
+    "examples": "npm run make:examples && ecstatic docs/examples",
+    "make:docs": "./node_modules/.bin/jsdoc -c jsdoc.json README.md types -d docs",
+    "make:examples": "docco examples/*.js -o docs",
+    "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && ./node_modules/.bin/codecov",
+    "start": "node scripts/node",
+    "test": "mocha tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RolePlayGateway/rpg-lite.git"
+  },
+  "keywords": [
+    "rpg",
+    "fabric",
+    "game",
+    "client"
+  ],
+  "author": "Eric Martindale",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RolePlayGateway/rpg-lite/issues"
+  },
+  "homepage": "https://github.com/RolePlayGateway/rpg-lite#readme",
+  "dependencies": {
+    "@fabric/core": "FabricLabs/fabric#fabric-0.1.0-develop",
+    "jsdocs": "^1.0.0"
+  },
+  "devDependencies": {
+    "codecov": "^3.6.1",
+    "docco": "^0.8.0",
+    "ecstatic": "^4.1.2",
+    "jsdoc": "FabricLabs/jsdoc#fabric",
+    "mocha": "^6.2.2",
+    "nyc": "^14.1.1",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "yarn": "^1.19.1"
+  }
+}
